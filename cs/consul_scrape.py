@@ -55,7 +55,6 @@ class ConsulScrape(object):
         """
         s3_resource = boto3.resource('s3')
         for service in self.service:
-            print json.dumps(self.config[service])
             s3_resource.Bucket(self.s3_bucket).put_object(
                 Key='{service}.config.json'.format(service=service),
                 Body=json.dumps(self.config[service])
