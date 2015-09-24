@@ -5,7 +5,7 @@ Base file for consul scrape
 
 import json
 import boto3
-import cs.config as config
+import config
 import consulate
 
 

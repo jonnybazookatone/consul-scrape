@@ -5,8 +5,8 @@ Base script file for running routines
 
 import logging
 import logging.config
-import cs.config as config
-from cs.consul_scrape import ConsulScrape
+import config
+from consul_scrape import ConsulScrape
 
 logging.config.dictConfig(config.CS_LOGGING)
 logger = logging.getLogger('consul-scrape')
