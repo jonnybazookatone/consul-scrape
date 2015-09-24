@@ -1,9 +1,11 @@
+# encoding: utf-8
 """
 Base file for consul scrape
 """
 
 import json
 import boto3
+import cs.config as config
 import consulate
 
 
@@ -13,16 +15,17 @@ class ConsulScrape(object):
     content and dump to S3. More for tidiness than anything.
     """
 
-    def __init__(self, service, environment='staging', **kwargs):
+    s3_bucket = config.S3_BUCKET
+    environment = config.ENVIRONMENT
+
+    def __init__(self, service, **kwargs):
         """
         Constructor
 
         :param service: service to be scraped from consul
         """
         self.config = {}
-        self.s3_bucket = 'etc-consul-scrape'
         self.session = self.consul_session(**kwargs)
-        self.environment = environment
         self.service = service if isinstance(service, list) else [service]
         self.search_terms = [
             'config/{service}/{environment}'.format(

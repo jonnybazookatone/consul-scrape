@@ -1,17 +1,20 @@
+# encoding: utf-8
 """
 Unit tests placeholder
 """
 from cs.consul_scrape import ConsulScrape
+from cs.run import run
 from moto import mock_s3
 from unittest import TestCase
 
 import mock
 import boto3
+import cs.config as config
 
 
-class TestConsulScrape(TestCase):
+class BaseTest(TestCase):
     """
-    Unit tests for all of the main scrape methods
+    Container to not repeat setup
     """
 
     def setUp(self):
@@ -28,14 +31,46 @@ class TestConsulScrape(TestCase):
             }
         }
 
-    def test_functional_blueprint(self):
+
+class TestRun(BaseTest):
+    """
+    Unit tests for the run command
+    """
+    @mock.patch('cs.consul_scrape.consulate.Consul')
+    @mock_s3
+    def test_run_command(self, mocked_class):
         """
-        List of entire steps need to be carried out by the consul-scraper
+        Test the run command pulls from consul and sends to s3
         """
 
-        # Scraper pulls all the key/values from consul
+        # Mock the consulate session class
+        session = mocked_class.return_value
+        session.kv.find.return_value = self.stub_service_payload
 
-        # Scraper dumps each of the key/values to S3 storage
+        # Setup the fake moto resources
+        s3_resource = boto3.resource('s3')
+        s3_resource.create_bucket(Bucket=ConsulScrape.s3_bucket)
+
+        # Run the command
+        run(service=['adsws'])
+
+        # Check it got stored
+        s3_object = s3_resource.Object(
+            ConsulScrape.s3_bucket,
+            '{service}.config.json'.format(service=self.service)
+        )
+
+        keys = s3_object.get().keys()
+
+        self.assertTrue(
+            len(keys) > 0
+        )
+
+
+class TestConsulScrape(BaseTest):
+    """
+    Unit tests for all of the main scrape methods
+    """
 
     @mock.patch('cs.consul_scrape.consulate.Consul')
     def test_get_consul_keys_in_memory(self, mocked_class):
@@ -99,3 +134,18 @@ class TestConsulScrape(TestCase):
             len(keys) > 0
         )
 
+
+class TestConfig(TestCase):
+    """
+    Dummy test case for config file
+    """
+
+    def test_values(self):
+        """
+        Test contains relevant values
+        """
+
+        self.assertIsInstance(config.CS_LOGGING, dict)
+        self.assertIsInstance(config.S3_BUCKET, basestring)
+        self.assertIsInstance(config.ENVIRONMENT, basestring)
+        self.assertEqual(config.ENVIRONMENT, 'staging')
