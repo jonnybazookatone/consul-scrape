@@ -13,3 +13,6 @@ omit =
 exclude_lines =
     # Have to re-enable the standard pragma
     pragma: no cover
+
+    # Already have tests for the main command
+    if __name__ == .__main__.:
